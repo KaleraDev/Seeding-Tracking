@@ -1,0 +1,138 @@
+
+
+Private Sub Image1_BeforeDragOver(ByVal Cancel As MSForms.ReturnBoolean, ByVal Data As MSForms.DataObject, ByVal X As Single, ByVal Y As Single, ByVal DragState As MSForms.fmDragState, ByVal Effect As MSForms.ReturnEffect, ByVal Shift As Integer)
+
+End Sub
+'Cancel Button
+Private Sub TBC_Click()
+Unload ARCHIVETPmi 'Closes Form
+End Sub
+'Disallows TB1 <2
+Private Sub TB1_AfterUpdate()
+'PURPOSE: Limit TextBox inputs to Postive Whole Numbers (excluding 0)
+'SOURCE: www.TheSpreadsheetGuru.com/the-code-vault
+
+If Not IsNumeric(TB1.Text) And TB1.Text <> "" Then
+  If Len(TB1.Text) > 1 Then
+    'Remove Added Non-Numerical Character from Number
+      TB1.Text = Abs(Round(Left(TB1.Text, Len(TB1.Text) - 1), 0))
+  Else
+    'Delete Single Non-Numerical Character
+      TB1.Text = ""
+  End If
+ElseIf TB1.Text <> "" Then
+  If TB1.Text = 0 Then
+    'Ensure Not Zero
+      TB1.Text = "2"
+  ElseIf TB1.Text = 1 Then
+    'Ensure Not One
+      TB1.Text = "2"
+
+  Else
+    'Ensure Positive and No Decimals
+      TB1.Text = Abs(Round(TextBox1.Text, 0))
+  End If
+End If
+End Sub
+'STEP1
+Sub TBE_Click()
+Dim Msg, Style, Title, Help, Ctxt, Response, MyString
+    Msg = "Are you certain you want to archive the rows from " & ARCHIVETPmi.TB1 & " to " & ARCHIVETPmi.TB2 & " ?" ' Define message.
+    Style = vbYesNo + vbQuestion + vbDefaultButton2    ' Define buttons.
+    Title = "Attention"    ' Define title.
+
+Response = MsgBox(Msg, Style, Title, Help, Ctxt)
+If Response = vbNo Then
+' User chose No.
+Unload ARCHIVETPmi
+'Cancel the form.
+    Else   ' User chose Yes.
+    Call YIELD_CHECK
+End If
+End Sub
+
+'STEP2
+Sub YIELD_CHECK()
+    ADT = Sheets("DATA FOR ARCHIVE TOOL").Range("C5") & ARCHIVETPmi.TB1.Text
+    BDT = Sheets("DATA FOR ARCHIVE TOOL").Range("C5") & ARCHIVETPmi.TB2.Text
+    F = ARCHIVETPmi.TB1.Value
+    L = ARCHIVETPmi.TB2.Value
+    Set myCellRange = ThisWorkbook.Worksheets("Tracking").Range(ADT, BDT)
+    'range of yield cells to be checked
+
+    If WorksheetFunction.CountA(myCellRange) < myCellRange.Count Then
+    Dim Msg, Style, Title, Help, Ctxt, Response, MyString
+        Msg = "Some of the plants don't seem to have been harvested, are you sure you want to continue?"
+        Style = vbYesNo + vbCritical + vbDefaultButton2    ' Define buttons.
+        Title = "Attention"    ' Define title.
+
+        Response = MsgBox(Msg, Style, Title, Help, Ctxt)
+        If Response = vbYes Then
+        Call COPY_CUT_CREATE
+        End If
+        If Response = vbNo Then
+        Unload ARCHIVETPmi
+        End If
+    Else: Call COPY_CUT_CREATE
+    End If
+End Sub
+'STEP3
+Sub COPY_CUT_CREATE()
+
+    TB1m = "A" & ARCHIVETPmi.TB1.Text
+    TB2m = "AZ" & ARCHIVETPmi.TB2.Text
+    Dim ws As Worksheet
+        Set ws = ThisWorkbook.Sheets.Add
+        ws.Name = "Tempo07189412"
+        ActiveWorkbook.Sheets("Tracking").Range("1:1").Copy Sheets("Tempo07189412").Range("A1")
+        ActiveWorkbook.Sheets("Tracking").Range(TB1m, TB2m).Copy Sheets("Tempo07189412").Range("A2")
+        
+
+        'End With
+    'Create (Add worksheet, cut and insert rows, shift Tracking rows)
+    
+    SDT = Sheets("DATA FOR ARCHIVE TOOL").Range("E5") & ARCHIVETPmi.TB1.Text
+    EDT = Sheets("DATA FOR ARCHIVE TOOL").Range("E5") & ARCHIVETPmi.TB2.Text
+    RD1 = ActiveWorkbook.Sheets("Tempo07189412").Range(SDT)
+    RD2 = ActiveWorkbook.Sheets("Tempo07189412").Range(EDT)
+    D1 = Format(RD1, "MMDDYY")
+    D2 = Format(RD2, "MMDDYY")
+    TC1 = "TP_MICRO_" & D1 & "_" & D2
+
+    Application.DisplayAlerts = False
+        ThisWorkbook.Sheets("Tempo07189412").Copy
+        ActiveWorkbook.SaveAs Filename:="\\192.168.1.202\Company\Horticulture\Plant Production\TRADEPORT\Seeding & Tracking Log\ARCHIVE" & "/" & TC1, FileFormat:=xlCSV, CreateBackup:=True
+        ActiveWorkbook.Close
+        ThisWorkbook.Sheets("Tempo07189412").Delete
+        ActiveWorkbook.Sheets("Tracking").Range(TB1m, TB2m).Delete
+        
+    
+    Application.DisplayAlerts = True
+    
+    Unload ARCHIVETPmi
+'Copy New sheet to new file, save as DATERANGE.CSV to Archive folder in company drive, close workbook, delete created sheet, end program
+End Sub
+'Appearance
+Sub TBEII_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Save Button Green when hovered on
+
+  TBCII.Visible = True
+  TBEII.Visible = False
+
+End Sub
+'Appearance
+Sub TBCII_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Cancel Button Green when hovered on
+
+TBCII.Visible = False
+TBEII.Visible = True
+
+End Sub
+'Appearance
+Sub Userform_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Reset Userform buttons to Inactive Status
+
+TBCII.Visible = True
+TBEII.Visible = True
+
+End Sub
